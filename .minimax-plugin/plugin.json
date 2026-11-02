@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "name": "respire-minimax-code",
+  "displayName": "respire 记忆",
+  "version": "0.3.0",
+  "description": "respire (rsrs) local-first encrypted memory for MiniMax Code 0.4+: every-round title-tier recall, one-prefix store, Stop storage nudge, plus the full memory tool set over MCP. Register on rsrs.rs for sync; the sidecar model is an optional boost.",
+  "author": "risense-ai",
+  "icon": "icon.png",
+  "category": "Productivity",
+  "exampleQueries": [
+    "记：项目 A 改用 pnpm，因为 npm 锁文件冲突",
+    "我们上次约定的部署流程是什么？",
+    "把这条事实存进记忆：构建走 vite，测试用 node --test"
+  ],
+  "apps": [],
+  "mcpServers": [
+    "respire.mcp.json"
+  ],
+  "skills": [
+    "skills/respire/SKILL.md"
+  ],
+  "hooks": [
+    "hooks/respire-hooks.json"
+  ]
+}

@@ -170,7 +170,7 @@ function loadConfig() {
   const candidates = [
     process.env.RESPITE_CONFIG || '',
     path.join(dataDir(), 'respire.config.json'),
-    path.join(process.env.PLUGIN_ROOT || process.cwd(), 'io.minimax.mcode', 'respire.config.json'),
+    path.join(process.env.PLUGIN_ROOT || process.cwd(), 'respire.config.json'),
   ];
   for (const file of candidates) {
     if (!file) continue;

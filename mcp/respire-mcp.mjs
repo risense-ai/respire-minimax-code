@@ -56,7 +56,7 @@ function configuredEngine() {
     process.env.RESPITE_CONFIG || '',
     process.env.PLUGIN_DATA ? path.join(process.env.PLUGIN_DATA, 'respire.config.json') : '',
     process.env.PLUGIN_ROOT
-      ? path.join(process.env.PLUGIN_ROOT, 'io.minimax.mcode', 'respire.config.json')
+      ? path.join(process.env.PLUGIN_ROOT, 'respire.config.json')
       : '',
   ]) {
     if (!file) continue;

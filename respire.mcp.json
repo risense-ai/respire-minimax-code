@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "mcpServers": {
+    "respire": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./mcp/respire-mcp.mjs"
+      ]
+    }
+  }
+}

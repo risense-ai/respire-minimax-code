@@ -2,27 +2,31 @@
 
 > 吸即存，呼即取——给 MiniMax Code 装上 respire 本地加密记忆。
 
-本插件由 [respire-general](../respire-general) 生成：技能与 MCP 能力来自通用包，另加 MiniMax Code
-0.4.0+ 的 hook 扩展。数据本地加密、端侧优先、云端 LWW 同步；引擎是
+本插件由 [respire-general](../respire-general) 生成，使用 **MiniMax Plugin V1 官方格式**
+（`.minimax-plugin/`）。技能与 MCP 能力来自通用包，hooks 使用 MiniMax Code 0.4.0+ 的插件 hook。
+数据本地加密、端侧优先、云端 LWW 同步；引擎是
 [respire（命令名 rsrs）](https://www.npmjs.com/package/@rsrsai/cli)。
 
 ## 插件由什么组成
 
 | 路径 | 作用 |
 | --- | --- |
-| `.claude-plugin/plugin.json` | **mcode 0.4.0+ 权威清单**：inline `hooks` + `mcpServers` |
+| `.minimax-plugin/plugin.json` | **官方 V1 清单**：icons/category/mcpServers/skills/hooks |
+| `icon.png` | 512×512 包图标（V1 必填） |
+| `respire.mcp.json` | V1 MCP 文件：`node ./mcp/respire-mcp.mjs` → `rsrs mcp` |
+| `hooks/respire-hooks.json` | 官方 hook 文档：SessionStart / UserPromptSubmit / Stop |
+| `hooks/scripts/respire-hook.mjs` | 三类事件的单入口 hook（Node，无第三方依赖） |
 | `mcp/respire-mcp.mjs` | stdio 桥：解析引擎（含 Windows `.cmd` shim）后交给 `rsrs mcp` |
-| `io.minimax.mcode/hooks/scripts/respire-hook.mjs` | 三类事件的单入口 hook（Node，无第三方依赖） |
-| `skills/respire/SKILL.md` | 记忆操作法（何时查、怎么存、红线），由 `skills/` 自动发现 |
+| `skills/respire/SKILL.md` | 记忆操作法（何时查、怎么存、红线） |
 
-### 为什么没有根 `plugin.json`
+## 版本与 hooks 支持
 
-mcode 本地读取器会**先尝试根 `plugin.json` 的便携 Agent Plugins 布局**，而该读取器固定返回
-`hooks: []`；同时存在根清单与 `.claude-plugin` 时，hooks 会被静默忽略。0.4+ 专用布局因此只保留
-`.claude-plugin/plugin.json`。该结论已在 **mcode 0.6.12** 上实测：删除根清单后 SessionStart /
-UserPromptSubmit / Stop 全部执行。
-
-代价：**不支持 mcode 0.3.x**（0.3 只读便携布局）。需要 0.3 时请用 `respire-general`（无自动 hooks）。
+- **mcode 0.4.0+**：支持 V1 插件与 hook；本包在 **0.6.12** 上实测通过。
+- **mcode 0.3.x**：旧版本线，只读根 `plugin.json` 的便携 Agent Plugins 布局；hooks 是实验性文档，
+  本包不支持。按“只兼容有 hooks 的版本”的标准，0.3 不在目标内。
+- **当前版本**：npm `@minimax-ai/code` 最新为 0.6.12。
+- hooks 不是 MiniMax Code 缺失的能力；缺的是**便携布局**对 hooks 的支持。便携读取器固定返回
+  `hooks: []`，所以不能把根清单和 V1/Compat 清单混在一起。
 
 ## 安装
 
@@ -53,6 +57,20 @@ mcode plugin list --json               # 应看到 skillCount=1、mcpServerCount
 
 然后在 TUI 里打开 `/plugins` 刷新并启用。移除本地插件会删除安装目录，请保留源目录。
 
+### 官方 Marketplace
+
+V1 格式就是官方 Marketplace 的包格式。上架还需要官方审核（icon、category、exampleQueries、
+archive/digest、catalog 成员资格），不是本地加载的必要条件。
+
+## Marketplace 与普通插件有什么不同
+
+Marketplace 只是**分发/catalog 来源**（`official` 与 `local`），不是另一套运行时：
+
+- 安装后的插件能力由**清单格式 + 运行时版本**决定，不由 marketplace 决定。
+- 官方 `.minimax-plugin` V1 **支持 hooks**；本地 `.claude-plugin` 也支持 hooks；
+  根 `plugin.json` 的便携布局不支持 hooks。
+- `@official` 需要 V1 + 官方审核；`local` 直接放目录即可，两者都能有 hooks。
+
 ## 装上后发生什么
 
 | 时机 | 行为 |
@@ -77,7 +95,7 @@ mcode 的 hook 解析器只接受 **1–10 秒**的整数 timeout，超过会被
 
 1. `RESPITE_CONFIG` 环境变量
 2. `$PLUGIN_DATA/respire.config.json`
-3. `$CLAUDE_PLUGIN_ROOT/io.minimax.mcode/respire.config.json`
+3. `$PLUGIN_ROOT/respire.config.json`
 
 | 字段 | 默认 | 含义 |
 | --- | --- | --- |
@@ -107,14 +125,15 @@ mcode 的 hook 解析器只接受 **1–10 秒**的整数 timeout，超过会被
 
 | 项 | respire-qoder | respire-minimax-code |
 | --- | --- | --- |
-| 协议 | Qoder 私有清单 `.qoder-plugin/` | MiniMax Code 0.4+（Claude 兼容布局） |
-| 清单 | `.qoder-plugin/plugin.json` | 仅 `.claude-plugin/plugin.json` |
-| 根占位符 | `${QODER_PLUGIN_ROOT}` | `${CLAUDE_PLUGIN_ROOT}`（harness 注入） |
+| 协议 | Qoder 私有清单 `.qoder-plugin/` | MiniMax Plugin V1 官方格式 |
+| 清单 | `.qoder-plugin/plugin.json` | `.minimax-plugin/plugin.json` |
+| hooks | 独立 `hooks/hooks.json` | `hooks/respire-hooks.json`，manifest 引用 |
+| 根占位符 | `${QODER_PLUGIN_ROOT}` | `$PLUGIN_ROOT` / `%PLUGIN_ROOT%`（shell 展开） |
 | 数据目录 | `QODER_PLUGIN_DATA` | `PLUGIN_DATA`（harness 注入） |
 | Stop 阻塞 | `{"decision":"deny"}` | `{"decision":"block","reason":…}`（Claude 兼容） |
 | hook 运行时 | Python | Node（mcode 本身是 Node，不额外要求 Python） |
 | 额外能力 | 无 | `rsrs mcp` 全套 MCP 工具（不依赖 hook 也能用） |
-| 0.3 支持 | 不适用 | **不支持**（0.3 只读便携布局） |
+| 0.3 支持 | 不适用 | **不支持**（只兼容有 hooks 的 0.4+） |
 
 ## 验证
 
@@ -127,10 +146,10 @@ node ../respire-general/tests/run.mjs --check
 
 ```bash
 printf '%s' '{"hook_event_name":"UserPromptSubmit","prompt":"respire 记忆","session_id":"t","cwd":"."}' \
-  | node io.minimax.mcode/hooks/scripts/respire-hook.mjs UserPromptSubmit
+  | node hooks/scripts/respire-hook.mjs UserPromptSubmit
 ```
 
-### 本地 mcode 冒烟测试（可选，但推荐）
+### 本地 mcode 冒烟测试（已验证 0.6.12）
 
 用隔离的 `MINIMAX_DATA_DIR` 和临时 npm 前缀，不碰全局安装：
 
@@ -138,19 +157,21 @@ printf '%s' '{"hook_event_name":"UserPromptSubmit","prompt":"respire 记忆","se
 2. 把本目录拷到 `<data>/plugins/respire-minimax-code`
 3. `MINIMAX_DATA_DIR=<data> node <temp>/node_modules/@minimax-ai/code/cli.js plugin list --json`
    应看到 `skillCount: 1`、`mcpServerCount: 1`、`enabled: true`
-4. 用本地 mock OpenAI 兼容服务跑 `mcode exec`，检查 `<data>/v2/plugin-data/hooks/respire-minimax-code/hook.log`
-   应依次出现 `session`、`recall`、`stop(nudge)`、`stop(active_skip)`
-
-本包已在 **mcode 0.6.12** 上按上述方式实测：MCP 连接成功，三个 hook 事件均执行。
+4. 用本地 mock OpenAI 兼容服务跑 `mcode exec`，检查
+   `<data>/v2/plugin-data/hooks/respire-minimax-code/hook.log`，应依次出现
+   `session`、`recall`、`stop(nudge)`、`stop(active_skip)`
 
 ## 已知边界
 
-- **不支持 mcode 0.3.x**：0.3 只读便携根清单，而根清单会让 0.4+ 忽略 hooks；二者不能同时满足。
-- **社区 Registry 目前要求根 `plugin.json`**：该便携布局会丢掉 hooks。若目标是 MiniMax-Code-Plugins 社区目录，应提交 `respire-general`（技能 + MCP，无自动 hooks），或另做无 hooks 的便携变体。
-- **官方 Marketplace 使用 `.minimax-plugin` V1**：本包未包含该布局；上官方目录需要另做 V1 清单（icon/category/hooks 文件）并走官方 issue/PR 审核。
+- **只支持 0.4.0+**：0.3 只读便携根清单，且 hooks 是实验性的；按“必须有 hooks”的标准不兼容。
+- **社区 Registry 的校验器要求根 `plugin.json`**：V1 包不会通过该注册表校验；官方 Marketplace
+  才是 V1 的目标渠道。社区目录可投 `respire-general`（无自动 hooks）。
+- **官方 Marketplace 上架仍需审核**：catalog 成员资格、archive/digest、icon 字节校验由官方
+  Marketplace validator 执行；本地加载不需要这些。
 - **召回质量是引擎上限**：用词鸿沟下 BGE-M3 可能漏召真条——简则已约束模型「命中不贴题换词补查」。
 - **冷启动窗**：runtime 冷启＋模型加载可能让首次语义召回超过 4.5s，此时自动切词面兜底；整体仍在 9s 内。
-- **MCP 需要 PATH 上的 `node`**：`mcpServers` 用 `node` 启动 stdio 桥，桥自己解析 `rsrs`（含 Windows `.cmd` shim）；`node` 缺失时 MCP 无法启动（rsrs 本身也是 Node CLI）。
+- **MCP 需要 PATH 上的 `node`**：V1 MCP 用 `node` 启动 stdio 桥，桥自己解析 `rsrs`
+  （含 Windows `.cmd` shim）；`node` 缺失时 MCP 无法启动（rsrs 本身也是 Node CLI）。
 
 ## 数据与网络
 
