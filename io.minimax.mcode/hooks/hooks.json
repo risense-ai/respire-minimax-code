@@ -1,0 +1,38 @@
+{
+  "$schema": "https://minimax.io/schemas/mcode-hooks/0.1.0/hooks.schema.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "node",
+        "args": [
+          "${PLUGIN_ROOT}/io.minimax.mcode/hooks/scripts/respire-hook.mjs",
+          "SessionStart"
+        ],
+        "timeout": 10000,
+        "once": false
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "command": "node",
+        "args": [
+          "${PLUGIN_ROOT}/io.minimax.mcode/hooks/scripts/respire-hook.mjs",
+          "UserPromptSubmit"
+        ],
+        "timeout": 10000,
+        "once": false
+      }
+    ],
+    "Stop": [
+      {
+        "command": "node",
+        "args": [
+          "${PLUGIN_ROOT}/io.minimax.mcode/hooks/scripts/respire-hook.mjs",
+          "Stop"
+        ],
+        "timeout": 10000,
+        "once": false
+      }
+    ]
+  }
+}

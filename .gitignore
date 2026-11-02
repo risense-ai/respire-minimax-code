@@ -1,0 +1,5 @@
+# plugin state written by mcode
+.plugin-data/
+respire.config.json
+hook.log
+.nudge_counter
