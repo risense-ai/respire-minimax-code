@@ -21,10 +21,10 @@
 
 ## 版本与 hooks 支持
 
-- **mcode 0.4.0+**：支持 V1 插件与 hook；本包在 **0.6.12** 上实测通过。
+- **mcode 0.4.0+**：支持 V1 插件与 hook；本包在 **0.6.12 / 0.7.4** 上实测通过。
 - **mcode 0.3.x**：旧版本线，只读根 `plugin.json` 的便携 Agent Plugins 布局；hooks 是实验性文档，
   本包不支持。按“只兼容有 hooks 的版本”的标准，0.3 不在目标内。
-- **当前版本**：npm `@minimax-ai/code` 最新为 0.6.12。
+- **当前版本**：npm `@minimax-ai/code` 最新为 0.7.4。
 - hooks 不是 MiniMax Code 缺失的能力；缺的是**便携布局**对 hooks 的支持。便携读取器固定返回
   `hooks: []`，所以不能把根清单和 V1/Compat 清单混在一起。
 
@@ -149,7 +149,7 @@ printf '%s' '{"hook_event_name":"UserPromptSubmit","prompt":"respire 记忆","se
   | node hooks/scripts/respire-hook.mjs UserPromptSubmit
 ```
 
-### 本地 mcode 冒烟测试（已验证 0.6.12）
+### 本地 mcode 冒烟测试（已验证 0.6.12 / 0.7.4）
 
 用隔离的 `MINIMAX_DATA_DIR` 和临时 npm 前缀，不碰全局安装：
 
