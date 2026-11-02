@@ -22,11 +22,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-// mcode caps one handler at 10s (parser.ts: 1..10). Leave room for node startup,
-// engine startup and process teardown. A cold engine can spend several seconds
-// loading BGE-M3, so recall/store get 9s and the probe gets 6s.
-const PROBE_T = 6_000;
-const STORE_T = 9_000;
+// mcode caps one handler at 10s (parser.ts: 1..10). Leave headroom for node
+// startup, spawn overhead and mcode's own timer: keep the whole recall <=7.5s.
+const PROBE_T = 5_000;
+const STORE_T = 8_000;
 const LOG_MAX = 256 * 1024;
 
 const DEFAULTS = {
@@ -40,12 +39,12 @@ const DEFAULTS = {
   enabled: true,
   store_nudge_every: 1,
   store_force: false,
-  semantic_timeout_ms: 4500,
+  semantic_timeout_ms: 3500,
   lexical_fallback: true,
   skip_prefixes: [],
 };
 
-const RECALL_TOTAL_T = 9_000;
+const RECALL_TOTAL_T = 7_500;
 
 const STORE_PREFIX = /^(?:记|存|记录|记住|remember)\s*[:：]\s*/i;
 const SKIP_PREFIX = /^(?:\/nomem|#nomem)\b/;
@@ -190,8 +189,8 @@ function loadConfig() {
   if (!Number.isInteger(cfg.recall_limit) || cfg.recall_limit < 1) cfg.recall_limit = 5;
   if (!Number.isInteger(cfg.min_prompt_chars) || cfg.min_prompt_chars < 0) cfg.min_prompt_chars = 2;
   if (!Number.isInteger(cfg.budget_chars) || cfg.budget_chars < 200) cfg.budget_chars = 1500;
-  if (!Number.isInteger(cfg.semantic_timeout_ms) || cfg.semantic_timeout_ms < 500) cfg.semantic_timeout_ms = 4500;
-  if (cfg.semantic_timeout_ms > 8000) cfg.semantic_timeout_ms = 8000;
+  if (!Number.isInteger(cfg.semantic_timeout_ms) || cfg.semantic_timeout_ms < 500) cfg.semantic_timeout_ms = 3500;
+  if (cfg.semantic_timeout_ms > 6000) cfg.semantic_timeout_ms = 6000;
   return cfg;
 }
 
@@ -469,7 +468,7 @@ async function doLexicalRecall(engine, prompt, cfg, started) {
     const result = await runEngine(
       engine,
       ['diary', '--contains', term, '--limit', String(cfg.recall_limit * 3), '--json'],
-      Math.min(2_500, left),
+      Math.min(1_800, left),
     );
     if (result.timedOut || result.code !== 0) continue;
     let doc;

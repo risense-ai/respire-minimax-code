@@ -86,7 +86,7 @@ Marketplace 只是**分发/catalog 来源**（`official` 与 `local`），不是
 ## 为什么 hook 超时是 10 秒
 
 mcode 的 hook 解析器只接受 **1–10 秒**的整数 timeout，超过会被判为无效并静默跳过。
-因此本插件把内层子进程上限压到：语义召回 4.5s、词面兜底整体 9s、status 6s、store 9s，
+因此本插件把内层子进程上限压到：语义召回 3.5s、词面兜底整体 7.5s、status 5s、store 8s，
 给 Node 冷启动和进程回收留余量。冷启动第一次语义召回可能超时，会自动切词面兜底；fail-open 不拦会话。
 
 ## 调优（可选）
@@ -108,7 +108,7 @@ mcode 的 hook 解析器只接受 **1–10 秒**的整数 timeout，超过会被
 | `enabled` | `true` | 总开关：false=全线静默 |
 | `store_nudge_every` | `1` | Stop 节流：1=每轮、N=每 N 轮、0=关 |
 | `store_force` | `false` | `记：` 落库加 `--force` 跳过判重；慢库上更可靠，但失去候选合并提示 |
-| `semantic_timeout_ms` | `4500` | 语义召回单次预算；超时后走词面兜底 |
+| `semantic_timeout_ms` | `3500` | 语义召回单次预算；超时后走词面兜底 |
 | `lexical_fallback` | `true` | 语义超时/失败时用 `rsrs diary --contains` 兜底（只取 important） |
 | `log` | `true` | `$PLUGIN_DATA/hook.log` 留痕 |
 | `skip_prefixes` | `[]` | 宿主内部提示白名单，不召回也不落库 |
@@ -169,7 +169,7 @@ printf '%s' '{"hook_event_name":"UserPromptSubmit","prompt":"respire 记忆","se
 - **官方 Marketplace 上架仍需审核**：catalog 成员资格、archive/digest、icon 字节校验由官方
   Marketplace validator 执行；本地加载不需要这些。
 - **召回质量是引擎上限**：用词鸿沟下 BGE-M3 可能漏召真条——简则已约束模型「命中不贴题换词补查」。
-- **冷启动窗**：runtime 冷启＋模型加载可能让首次语义召回超过 4.5s，此时自动切词面兜底；整体仍在 9s 内。
+- **冷启动窗**：runtime 冷启＋模型加载可能让首次语义召回超过 3.5s，此时自动切词面兜底；整体仍在 7.5s 内。
 - **MCP 需要 PATH 上的 `node`**：V1 MCP 用 `node` 启动 stdio 桥，桥自己解析 `rsrs`
   （含 Windows `.cmd` shim）；`node` 缺失时 MCP 无法启动（rsrs 本身也是 Node CLI）。
 
