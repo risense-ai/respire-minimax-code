@@ -15,6 +15,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { detectTarget, injectOnce, readPluginConfig } from '../lib/inject.mjs';
 
 function isFile(p) {
   try {
@@ -52,22 +53,8 @@ function pathCandidates(name) {
 }
 
 function configuredEngine() {
-  for (const file of [
-    process.env.RESPITE_CONFIG || '',
-    process.env.PLUGIN_DATA ? path.join(process.env.PLUGIN_DATA, 'respire.config.json') : '',
-    process.env.PLUGIN_ROOT
-      ? path.join(process.env.PLUGIN_ROOT, 'respire.config.json')
-      : '',
-  ]) {
-    if (!file) continue;
-    try {
-      const doc = JSON.parse(fs.readFileSync(file, 'utf8'));
-      if (doc && typeof doc.rsrs === 'string' && doc.rsrs.trim()) return doc.rsrs.trim();
-    } catch {
-      /* ignore and keep probing */
-    }
-  }
-  return '';
+  const doc = readPluginConfig();
+  return typeof doc.rsrs === 'string' ? doc.rsrs.trim() : '';
 }
 
 function findEngine() {
@@ -140,6 +127,30 @@ const spec = resolveSpawn(engine);
 if (!spec) {
   console.error(`respire MCP: unsupported Windows shim for ${engine}; set RESPITE_BIN to cli.js`);
   process.exit(1);
+}
+
+// Hookless hosts: on the first MCP start, distribute respire rules via
+// `rsrs inject` if the detected host target is absent or stale. A current
+// target is skipped, so later starts do not rewrite the host config.
+const cfg = readPluginConfig();
+if (cfg.auto_inject !== false) {
+  const target = detectTarget(process.env, cfg.inject_target || 'auto');
+  if (target) {
+    const dataDir =
+      process.env.PLUGIN_DATA ||
+      path.join(process.env.PLUGIN_ROOT || process.cwd(), '.plugin-data');
+    const result = await injectOnce({
+      spec,
+      target,
+      dataDir,
+      log: (message) => {
+        if (process.env.RESPITE_DEBUG) console.error(message);
+      },
+    });
+    if (process.env.RESPITE_DEBUG) {
+      console.error(`respire MCP inject: ${JSON.stringify(result)}`);
+    }
+  }
 }
 
 const child = spawn(spec.command, [...spec.prefix, 'mcp'], {
